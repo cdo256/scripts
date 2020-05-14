@@ -1,8 +1,6 @@
-#!/bin/zsh
+#!/bin/bash
 
-. ~/scpt/envt
-. ~/scpt/alis
-. ~/scpt/keybbind
+. ~/scpt/keybind.sh
 [[ -n "$DISPLAY" ]] && setxkbmap gb
 
 if ! [[ -n "$DISPLAY" ]]; then

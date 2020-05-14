@@ -1,6 +1,0 @@
-#!/bin/zsh
-
-sorc=~/scpt/$1
-dest=~/scpt/$2
-
-cp $sorc $dest

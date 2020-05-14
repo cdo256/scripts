@@ -1,3 +1,0 @@
-#!/bin/zsh
-
-dirymove $1 $2 ~/scpt

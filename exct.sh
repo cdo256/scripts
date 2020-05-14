@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 command=$1
 shift
 indent() {

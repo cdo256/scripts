@@ -1,29 +1,25 @@
-#!/bin/zsh
+#!/usr/bin/env python3
+import os
+import subprocess
+import sys
+import argparse
 
-TEMP=`getopt -o l -n $0 "$@"`
+# Reference implementaion for creating new scripts
 
-while true; do
-	case "$1" in
-	-l)	line=$2; shift;;
-	*) 	break;;
-	esac
-	shift
-done
+parser = argparse.ArgumentParser(description='Edit a text file')
+parser.add_argument('-d', '--visual', action='store_true')
+parser.add_argument('-t', '--terminal', action='store_true')
+parser.add_argument('-l', '--line', type=int)
+parser.add_argument('file')
+args = parser.parse_args()
 
-if [[ ! -f "$1" ]]; then
-	>&2 echo "file doesn't exist" 
-else
-	if [[ -n "$DISPLAY" ]]; then
-		args=()
-		if [[ -n "$line" ]]; then
-			args+="+$line"
-		fi
-		cdoedit $args "$@" &
-	else
-		args=()
-		if [[ -n "$line" ]]; then
-			args+="+$line"
-		fi
-		nano $args "$@"
-	fi
-fi
+if args.visual or ('DISPLAY' in os.environ and not args.terminal):
+	if args.line is not None:
+		os.execvp('cdoedit', ['cdoedit', '-l', args.line, args.file])
+	else:
+		os.execvp('cdoedit', ['cdoedit', args.file])
+else:
+	if args.line is not None:
+		os.execvp('nano', ['nano', '+'+args.line, args.file])
+	else:
+		os.execvp('nano', ['nano', args.file])

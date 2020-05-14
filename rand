@@ -1,2 +1,0 @@
-#!/bin/zsh
-head -c4 /dev/random | sha256sum | head -c4
