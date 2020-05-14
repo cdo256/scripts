@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+pushd ~/scpt
+view $1
+popd

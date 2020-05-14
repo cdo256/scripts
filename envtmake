@@ -1,0 +1,7 @@
+#!/bin/zsh
+
+name=$1
+shift
+dest=$@
+echo "export $name='"$dest"'" >>~/scpt/envt
+. envt

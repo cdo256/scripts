@@ -1,0 +1,18 @@
+#!/bin/zsh
+
+path=$1
+file=$2
+
+result=""
+
+while read line $path; do
+    if [[ -e "$line/$1" ]]; then
+        echo `realpath "$line/$file"`
+        exit
+    fi
+done
+
+while read line $path; do
+   echo `realpath "$line/$file`
+   exit
+done

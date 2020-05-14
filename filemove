@@ -1,0 +1,16 @@
+#!/bin/zsh
+
+pdr=`realpath $1`
+ndr=`realpath $2`
+cdr=`pwd`
+ddr=$cdr
+if [[ $pdr/ =~ "^$cdr/" ]]; then
+	ddr=`sed "s%$pdr%$ndr%" <<<$cdr`
+fi
+cd /
+mv $pdr $ndr
+if [[ $? -eq 0 ]]; then
+	cd $ddr
+else
+	cd $cdr
+fi

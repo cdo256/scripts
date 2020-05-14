@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import sys
+import argparse
+
+parser = argparse.ArgumentParser(description='Open a web browser')
+parser.add_argument('-d', '--visual', action='store_true')
+parser.add_argument('-t', '--terminal', action='store_true')
+parser.add_argument('-s', '--search', action='store_true')
+parser.add_argument('-u', '--url', action='store_true')
+parser.add_argument('location')
+args = parser.parse_args()
+
+if args.search:
+	url = 'http://duckduckgo.com/lite/search?q='+args.location
+else:
+	url = args.location
+
+if args.visual or ('DISPLAY' in os.environ and not args.terminal):
+	os.execvp('firefox', ['firefox', url])
+else:
+	os.execvp('lynx', ['lynx', url])
+

@@ -1,0 +1,15 @@
+#!/bin/zsh
+
+out=`filemake`
+grep -e "$1" ~/data/dict | tee $out
+ 
+if [[ -s $out ]]; then
+	echoeror "file already in dict"
+	exit 1
+fi
+
+echo $1:$2 >>~/data/dict
+
+sorted=`filemake`
+sort -d <~/data/dict >$sorted
+<$sorted >~/data/dict

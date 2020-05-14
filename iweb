@@ -1,0 +1,7 @@
+#!/bin/zsh
+
+if ! [[ -n $DISPLAY ]]; then
+	lynx "$@"
+else
+	surf "$@" >/dev/null 2>/dev/null &
+fi

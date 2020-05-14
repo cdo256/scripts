@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+x="~/scpt/$1"
+if [[ -f $x ]]; then
+    remv "$x"
+else
+    echoeror "no file"
+fi
+

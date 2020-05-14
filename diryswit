@@ -1,0 +1,6 @@
+#!/bin/zsh
+
+f=$1
+if [[ $# -eq 0 ]]; then f=-; fi
+cd $f
+view

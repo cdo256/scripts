@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+if ! [[ -f "$HOME/scpt/$1" ]]; then
+	eror "file doesn't exist"
+	exit 1
+fi
+
+scptmake "$@"
+

@@ -1,0 +1,19 @@
+#!/bin/zsh
+
+file=~/scpt/$1
+
+if [[ -e "$file" ]]; then
+    if [[ `head -c 2 "$file"` != "#!" ]]; then
+        echo "existing file..."
+        sed -i '1i #!/bin/zsh' "$file"
+    fi
+    chmod +rwx "$file"
+    edit "$file"
+else
+    <<EOF >"$file"
+#!/bin/zsh
+EOF
+
+    chmod +xrw "$file"
+    edit "$file"
+fi

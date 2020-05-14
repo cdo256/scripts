@@ -1,0 +1,23 @@
+#!/bin/zsh
+
+symb="$1"
+shift
+multindx=`filemake`
+echo "$@" | tr " " "\n" | sort >$multindx
+multfilefrommultline | while read file; do
+    indxline=1
+    indxindx=1
+    outpline=`filemake`
+    tr "$symb" "\n" <$file | multfilefrommultline | while read line; do
+        indxfrsh=`linefromindx $indxindx <$multindx`
+        while [[ -n "$indxfrsh" ]] && [[ $indxfrsh -le $indxline ]]; do
+            if [[ `linefromindx $indxindx <$multindx` -eq $indxline ]]; then
+                tr "$symb" "\n" <$file | linefromindx $indxline >>$outpline
+            fi
+            indxindx=$(( $indxindx + 1 ))
+            indxfrsh=`linefromindx $indxindx <$multindx`
+        done
+        indxline=$(( $indxline + 1 ))
+    done
+    echo $outpline
+done

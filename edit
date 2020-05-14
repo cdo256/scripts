@@ -1,0 +1,29 @@
+#!/bin/zsh
+
+TEMP=`getopt -o l -n $0 "$@"`
+
+while true; do
+	case "$1" in
+	-l)	line=$2; shift;;
+	*) 	break;;
+	esac
+	shift
+done
+
+if [[ ! -f "$1" ]]; then
+	>&2 echo "file doesn't exist" 
+else
+	if [[ -n "$DISPLAY" ]]; then
+		args=()
+		if [[ -n "$line" ]]; then
+			args+="+$line"
+		fi
+		cdoedit $args "$@" &
+	else
+		args=()
+		if [[ -n "$line" ]]; then
+			args+="+$line"
+		fi
+		nano $args "$@"
+	fi
+fi

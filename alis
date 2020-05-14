@@ -1,0 +1,14 @@
+#!/bin/zsh
+if [[ $# -ge 1 ]]; then 
+#	>&2 echo "use alismake"
+fi
+
+alias alismake='. alismake'
+alias open='. open'
+alias rm='disabled remv'
+alias swit='. swit'
+alias nstl='sudo pacman -Sy --noconfirm'
+alias srch='grep -Rn'
+alias cmit='git add . && git commit -m _'
+alias pckg='sudo pacman'
+alias remv='fileremv'

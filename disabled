@@ -1,0 +1,4 @@
+#!/bin/zsh
+
+>&2 echo "this command is disabled. please use $1"
+

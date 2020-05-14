@@ -1,0 +1,5 @@
+#!/bin/zsh -x
+
+while read line; do
+    grep -Hbao "$@" "$line" | splt ":" 1 2 | join ":" 2
+done

@@ -1,0 +1,11 @@
+#!/bin/zsh
+
+export PATH=$HOME/scpt:$PATH
+export EDITOR=edit
+export BROWSER=iweb
+export TERMINAL=st
+export XDG_DATA_HOME=$HOME/data/
+export XDG_DATA_DIRS=$HOME/data/:/usr/local/share/:/usr/share/
+export XDG_CONFIG_HOME=$HOME/config/
+export XDG_CONFIG_DIRS=$HOME/config/:/etc/xdg/
+export XDG_CACHE_HOME=$HOME/.cache/

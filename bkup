@@ -1,0 +1,15 @@
+#!/bin/zsh
+
+x=`realpath $1`
+y=/bak`dirname $x`
+if [[ $# -ge 2 ]]; then
+    y=`realpath $2`
+fi
+if [[ ! -d $x ]]; then
+    sudo mkdir -p `dirname $y`
+    sudo cp $x $y
+else
+    sudo mkdir -p $y
+    sudo cp -r $x $y
+fi
+

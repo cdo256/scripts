@@ -1,0 +1,3 @@
+#!/bin/zsh
+
+iweb "https://duckduckgo.com/lite?q=$*"

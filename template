@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import sys
+import argparse
+
+# Reference implementaion for creating new scripts
+
+parser = argparse.ArgumentParser(description='TODO')
+parser.add_argument('-d', '--visual', action='store_true')
+parser.add_argument('-t', '--terminal', action='store_true')
+parser.add_argument('location')
+args = parser.parse_args()
+
+if args.visual or ('DISPLAY' in os.environ and not args.terminal):
+	os.execvp('echo', ['echo', 'TODO: visual command'])
+else:
+	os.execvp('echo', ['echo', 'TODO: terminal command'])
