@@ -1,7 +1,0 @@
-#!/bin/zsh
-
-alis=~/scpt/alis
-bkup $alis
-sed -i "/^alias $1=/d" $alis
-
-

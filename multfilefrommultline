@@ -1,6 +1,0 @@
-#!/bin/zsh
-
-outdir=`filemake -d`
-split -l1 - "$outdir/"
-ls -1 "$outdir/" | sed "s%^%$outdir/%"
- 

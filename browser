@@ -1,7 +1,0 @@
-#!/bin/zsh
-
-if [[ -n $DISPLAY ]]; then
-	surf "$@" &
-else
-	lynx "$@"
-fi

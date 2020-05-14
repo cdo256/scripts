@@ -1,3 +1,0 @@
-#!/bin/zsh
-
-ls "$@" | grep -ve '~$' -e '^#' | less

@@ -1,6 +1,0 @@
-#!/bin/zsh
-
-alis=~/scpt/envt
-bkup $alis
-sed -i "/^export $1=/d" $alis
-

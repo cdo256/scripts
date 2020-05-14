@@ -1,4 +1,0 @@
-#!/bin/zsh
-
-indx=$1
-sed -n "$1p"

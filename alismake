@@ -1,7 +1,0 @@
-#!/bin/zsh
-
-name=$1
-shift
-dest=$@
-echo "alias $name='"$dest"'" >>~/scpt/alis
-. alis
