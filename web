@@ -18,7 +18,7 @@ else:
 	url = args.location
 
 if args.visual or ('DISPLAY' in os.environ and not args.terminal):
-	os.execvp('firefox', ['firefox', url])
+	os.execvp('surf', ['surf', url])
 else:
 	os.execvp('lynx', ['lynx', url])
 
