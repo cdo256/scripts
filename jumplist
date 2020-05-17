@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import argparse
+import sys
+import re
+
+def lineCount(file):
+	with open(file) as f:
+		return f.read().count('\n')
+
+parser = argparse.ArgumentParser(description='Jump to lines selected from stdin')
+parser.add_argument('input')
+args = parser.parse_args()
+
+entries = []
+with open(args.input) as inputFile:
+	for entry in inputFile.readlines():
+		entryData = entry.split(':', maxsplit=2)
+		print(str(len(entries)), entry, sep=':\t', end='')
+		entries.append(entryData)
+
+if len(entries) == 0:
+	print("No matches")
+	sys.exit(0)
+
+try:
+	userInputs = input('> ')
+	origLines = dict()
+	for userInput in userInputs.split(' '):
+		splitInput = userInput.split('-', maxsplit=2)
+		if splitInput == ['all'] or splitInput == ['']:
+			start = 0
+			end = len(entries)
+		elif len(splitInput) == 1:
+			start = int(splitInput[0])
+			end = start
+		else:
+			start = int(splitInput[0])
+			end = int(splitInput[1])
+		for i in range(start, end+1):
+			filename = entries[i][0]
+			line = int(entries[i][1])
+			if filename in origLines:
+				# Account for changes made on prior lines, assume all changes were made above our current location.
+				line += lineCount(filename) - origLines[filename]
+			else:
+				origLines[filename] = lineCount(filename)
+			p = subprocess.Popen(['edit', '-s', '-l', str(line), filename])
+			p.wait()
+except KeyboardInterrupt:
+	# Ensure we flush before we exit otherwise the shell may print the prompt first
+	print(flush=True)
