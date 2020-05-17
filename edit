@@ -9,16 +9,24 @@ parser = argparse.ArgumentParser(description='Edit a text file')
 parser.add_argument('-d', '--visual', action='store_true')
 parser.add_argument('-t', '--terminal', action='store_true')
 parser.add_argument('-l', '--line', type=int)
+parser.add_argument('-s', '--synchronous', action='store_true')
 parser.add_argument('file')
 args = parser.parse_args()
 
 if args.visual or ('DISPLAY' in os.environ and not args.terminal):
+	command = ['cdoedit']
+	sync = args.synchronous
 	if args.line is not None:
-		subprocess.Popen(['cdoedit', '-l', str(args.line), args.file])
-	else:
-		subprocess.Popen(['cdoedit', args.file])
+		command += ['-l', str(args.line)]
+	command += [args.file]
 else:
+	sync = True
 	if args.line is not None:
-		os.execvp('nano', ['nano', '+'+str(args.line), args.file])
+		command = ['nano', '+'+str(args.line), args.file]
 	else:
-		os.execvp('nano', ['nano', args.file])
+		command = ['nano', args.file]
+
+if sync:
+	os.execvp(command[0], command)
+else:
+	subprocess.Popen(command)
