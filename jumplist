@@ -41,13 +41,13 @@ try:
 		splitInput = userInput.split('-', maxsplit=2)
 		if splitInput == ['all'] or splitInput == ['']:
 			start = 0
-			end = len(entries)
+			end = len(entries) - 1
 		elif len(splitInput) == 1:
 			start = int(splitInput[0])
 			end = start
 		else:
 			start = int(splitInput[0])
-			end = int(splitInput[1]) - 1
+			end = int(splitInput[1])
 		for i in range(start, end+1):
 			for line in entries[i][0]:
 				print(line, end='')
