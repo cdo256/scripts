@@ -47,7 +47,7 @@ try:
 			end = start
 		else:
 			start = int(splitInput[0])
-			end = int(splitInput[1])
+			end = int(splitInput[1]) - 1
 		for i in range(start, end+1):
 			for line in entries[i][0]:
 				print(line, end='')
