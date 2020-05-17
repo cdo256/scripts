@@ -11,8 +11,8 @@ parser.add_argument('query')
 parser.add_argument('location', nargs='?')
 args = parser.parse_args()
 
-# -H - filenames, -n - line numbers, -r - recursive
-command = ['grep', '-Hnr', args.query]
+# -H - filenames, -n - line numbers, -r - recursive, -I - ignore binary
+command = ['grep', '-HnrI', args.query]
 if args.location is not None:
 	command.extend([args.location])
 
@@ -26,6 +26,9 @@ for rawEntry in rawData[0].splitlines():
 	entryData = entry.split(':', maxsplit=2)
 	print(str(len(entries)), entry, sep=": ")
 	entries.append(entryData)
+if len(entries) == 0:
+	print("No matches")
+	sys.exit(0)
 try:
 	line = input('> ')
 except KeyboardInterrupt:
