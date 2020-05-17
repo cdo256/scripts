@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import subprocess
-import sys
 import argparse
 
 # Reference implementaion for creating new scripts
@@ -15,11 +14,11 @@ args = parser.parse_args()
 
 if args.visual or ('DISPLAY' in os.environ and not args.terminal):
 	if args.line is not None:
-		os.execvp('cdoedit', ['cdoedit', '-l', args.line, args.file])
+		subprocess.Popen(['cdoedit', '-l', str(args.line), args.file])
 	else:
-		os.execvp('cdoedit', ['cdoedit', args.file])
+		subprocess.Popen(['cdoedit', args.file])
 else:
 	if args.line is not None:
-		os.execvp('nano', ['nano', '+'+args.line, args.file])
+		os.execvp('nano', ['nano', '+'+str(args.line), args.file])
 	else:
 		os.execvp('nano', ['nano', args.file])
