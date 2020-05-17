@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import argparse
+import sys
+
+# Reference implementaion for creating new scripts
+
+parser = argparse.ArgumentParser(description='Find file/line recursively jump to it, wraps grep')
+parser.add_argument('query')
+parser.add_argument('location', nargs='?')
+args = parser.parse_args()
+
+# -H - filenames, -n - line numbers, -r - recursive
+command = ['grep', '-Hnr', args.query]
+if args.location is not None:
+	command.extend([args.location])
+
+process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+rawData = process.communicate()
+
+entries = []
+for rawEntry in rawData[0].splitlines():
+	entry = rawEntry.decode()
+	entryData = entry.split(':', maxsplit=2)
+	print(str(len(entries)), entry, sep=": ")
+	entries.append(entryData)
+try:
+	line = input('> ')
+except KeyboardInterrupt:
+	# Ensure we flush before we exit otherwise the shell may print the prompt first
+	print(flush=True)
+	sys.exit(0)
+
+if line is not None:
+	os.execvp('edit', ['edit', '-l', entries[int(line)][1], entries[int(line)][0]])
