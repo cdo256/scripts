@@ -3,6 +3,7 @@ import os
 import subprocess
 import argparse
 import sys
+import re
 
 # Reference implementaion for creating new scripts
 
@@ -29,12 +30,20 @@ for rawEntry in rawData[0].splitlines():
 if len(entries) == 0:
 	print("No matches")
 	sys.exit(0)
+
 try:
-	line = input('> ')
+	userInput = input('> ')
+	splitInput = userInput.split('-', maxsplit=2)
+	if len(splitInput) == 1:
+		entry = int(splitInput[0])
+		os.execvp('edit', ['edit', '-l', entries[entry][1], entries[entry][0]])
+	else:
+		start = int(splitInput[0])
+		end = int(splitInput[1])
+		for i in range(start, end):
+			p = subprocess.Popen(['edit', '-s', '-l', entries[i][1], entries[i][0]])
+			p.wait()
 except KeyboardInterrupt:
 	# Ensure we flush before we exit otherwise the shell may print the prompt first
 	print(flush=True)
 	sys.exit(0)
-
-if line is not None:
-	os.execvp('edit', ['edit', '-l', entries[int(line)][1], entries[int(line)][0]])
