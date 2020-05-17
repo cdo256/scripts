@@ -1,30 +1,15 @@
 #!/usr/bin/env python3
 import os
-import subprocess
 import argparse
-import sys
 
-parser = argparse.ArgumentParser(description='Find file/line recursively jump to it, wraps grep')
+parser = argparse.ArgumentParser(description='Find file/line recursively jump to it, wraps jumplist and grep')
 parser.add_argument('query')
 parser.add_argument('location', nargs='?')
 args = parser.parse_args()
 
 # -H - filenames, -n - line numbers, -r - recursive, -I - ignore binary
-command = ['grep', '-HnrI', args.query]
+command = ['jumplist', 'grep', '-HnrI', args.query]
 if args.location is not None:
 	command.extend([args.location])
 
-
-mktempProcess = subprocess.Popen(['mktemp'], stdout=subprocess.PIPE)
-tempFilename = mktempProcess.communicate()[0].decode().split('\n')[0]
-try:
-	with open(tempFilename, 'w') as temp:
-		grepProcess = subprocess.Popen(command, stdout=subprocess.PIPE, stdin=subprocess.DEVNULL)
-		temp.write(grepProcess.communicate()[0].decode())
-
-	jumpProcess = subprocess.Popen(['jumplist', tempFilename])
-	jumpProcess.wait()
-except KeyboardInterrupt:
-	pass
-finally:
-	os.remove(tempFilename)
+os.execvp(command[0], command)

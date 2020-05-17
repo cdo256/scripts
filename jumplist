@@ -9,15 +9,24 @@ def lineCount(file):
 	with open(file) as f:
 		return f.read().count('\n')
 
-parser = argparse.ArgumentParser(description='Jump to lines selected from stdin')
-parser.add_argument('input')
+parser = argparse.ArgumentParser(description='Jump to lines selected from the output of a command')
+parser.add_argument('-e', '--exclude-stderr', action='store_true')
+parser.add_argument('command', nargs=argparse.REMAINDER)
 args = parser.parse_args()
+
+if args.exclude_stderr:
+	stderr = None
+else:
+	stderr = subprocess.STDOUT
+
+listingProcess = subprocess.Popen(args.command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=stderr)
 
 entries = []
 tail = False # copy indented lines after entry
-with open(args.input) as inputFile:
-	for entry in inputFile.readlines():
-		# Doesn't work if file contains colon or a whitespace character
+with listingProcess.stdout as inputFile:
+	for rawEntry in inputFile.readlines():
+		entry = rawEntry.decode()
+		# Doesn't work if filename contains colon or a whitespace character
 		entryData = re.match('^([^:\s]+):([0-9]+):([0-9]+:)?.*$', entry)
 		if entryData is not None:
 			print(str(len(entries)), entry, sep=':\t', end='')
@@ -62,4 +71,5 @@ try:
 			p.wait()
 except KeyboardInterrupt:
 	# Ensure we flush before we exit otherwise the shell may print the prompt first
+	# TODO: This sometimes fails, investigate
 	print(flush=True)
