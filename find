@@ -5,7 +5,9 @@ import argparse
 import sys
 import re
 
-# Reference implementaion for creating new scripts
+def lineCount(file):
+	with open(file) as f:
+		return f.read().count('\n')
 
 parser = argparse.ArgumentParser(description='Find file/line recursively jump to it, wraps grep')
 parser.add_argument('query')
@@ -25,25 +27,36 @@ entries = []
 for rawEntry in rawData[0].splitlines():
 	entry = rawEntry.decode()
 	entryData = entry.split(':', maxsplit=2)
-	print(str(len(entries)), entry, sep=": ")
+	print(str(len(entries)), entry, sep=':\t')
 	entries.append(entryData)
 if len(entries) == 0:
 	print("No matches")
 	sys.exit(0)
 
 try:
-	userInput = input('> ')
-	splitInput = userInput.split('-', maxsplit=2)
-	if len(splitInput) == 1:
-		entry = int(splitInput[0])
-		os.execvp('edit', ['edit', '-l', entries[entry][1], entries[entry][0]])
-	else:
-		start = int(splitInput[0])
-		end = int(splitInput[1])
-		for i in range(start, end):
-			p = subprocess.Popen(['edit', '-s', '-l', entries[i][1], entries[i][0]])
+	userInputs = input('> ')
+	origLines = dict()
+	for userInput in userInputs.split(' '):
+		splitInput = userInput.split('-', maxsplit=2)
+		if splitInput == ['all'] or splitInput == ['']:
+			start = 0
+			end = len(entries)
+		elif len(splitInput) == 1:
+			start = int(splitInput[0])
+			end = start
+		else:
+			start = int(splitInput[0])
+			end = int(splitInput[1])
+		for i in range(start, end+1):
+			filename = entries[i][0]
+			line = int(entries[i][1])
+			if filename in origLines:
+				# Account for changes made on prior lines, assume all changes were made above our current location.
+				line += lineCount(filename) - origLines[filename]
+			else:
+				origLines[filename] = lineCount(filename)
+			p = subprocess.Popen(['edit', '-s', '-l', str(line), filename])
 			p.wait()
 except KeyboardInterrupt:
 	# Ensure we flush before we exit otherwise the shell may print the prompt first
 	print(flush=True)
-	sys.exit(0)
