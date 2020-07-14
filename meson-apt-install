@@ -22,10 +22,8 @@ for line in p.stdout:
 			toInstall.append(pkgMatch.group(1))
 			print('Package '+m.group(2)+' found in '+pkgMatch.group(1))
 		else:
-			print('Package '+m.group(2)+' not supported by apt.', file=stderr)
-			exit(1)
+			print('Package '+m.group(2)+' not supported by apt.', file=sys.stderr)
 
-print(toInstall)
 for pkg in toInstall:
 	command = ['sudo', 'apt-get', 'install', '-y']
 	command.append(pkg)
