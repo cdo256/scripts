@@ -8,6 +8,8 @@ parser.add_argument('-d', '--visual', action='store_true')
 parser.add_argument('-t', '--terminal', action='store_true')
 parser.add_argument('-s', '--search', action='store_true')
 parser.add_argument('-u', '--url', action='store_true')
+parser.add_argument('-b', '--browser', nargs=1)
+
 parser.add_argument('location')
 args = parser.parse_args()
 
@@ -17,7 +19,16 @@ else:
 	url = args.location
 
 if args.visual or ('DISPLAY' in os.environ and not args.terminal):
-	subprocess.Popen(['surf', url])
+	if args.browser is None:
+		browser = 'firefox'
+	else:
+		browser = args.browser
+	
+	subprocess.Popen([browser, url])
 else:
-	os.execvp('lynx', ['lynx', url])
-
+	if args.browser is None:
+		browser = 'lynx'
+	else:
+		browser = args.browser
+	
+	os.execvp(browser, [browser, url])
