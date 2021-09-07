@@ -8,7 +8,7 @@ parser.add_argument('location', nargs='?')
 args = parser.parse_args()
 
 # -H - filenames, -n - line numbers, -r - recursive, -I - ignore binary
-command = ['jumplist', 'grep', '-HnrI', args.query]
+command = ['jumplist', 'grep', '-HnrI', '--', args.query]
 if args.location is not None:
 	command.extend([args.location])
 
