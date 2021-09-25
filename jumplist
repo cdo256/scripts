@@ -23,6 +23,11 @@ listingProcess = subprocess.Popen(args.command, stdin=subprocess.DEVNULL, stdout
 
 entries = []
 tail = False # copy indented lines after entry
+
+def add_entry(entries, entry, file, line):
+	print(str(len(entries)), entry, sep=':\t', end='')
+	entries.append([[entry], file, line, []])
+
 with listingProcess.stdout as inputFile:
 	for rawEntry in inputFile.readlines():
 		entry = rawEntry.decode()
@@ -30,12 +35,10 @@ with listingProcess.stdout as inputFile:
 		entryData1 = re.match(r'^([^:\s]+):([0-9]+):([0-9]+:)?.*$', entry)
 		entryData2 = re.match(r'^\s*File "([^"]+)", line ([0-9]+).*$', entry)
 		if entryData1 is not None:
-			print(str(len(entries)), entry, sep=':\t', end='')
-			entries.append([[entry], entryData1.group(1), entryData1.group(2), []])
+			add_entry(entries, entry, entryData1.group(1), entryData1.group(2))
 			tail = True
 		elif entryData2 is not None:
-			print(str(len(entries)), entry, sep=':\t', end='')
-			entries.append([[entry], entryData2.group(1), entryData2.group(2), []])
+			add_entry(entries, entry, entryData2.group(1), entryData2.group(2))
 			tail = True
 		elif re.match('^[^\s]', entry) is None and tail:
 			print('\t'+entry, end='')
