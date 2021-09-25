@@ -11,6 +11,7 @@ def lineCount(file):
 
 parser = argparse.ArgumentParser(description='Jump to lines selected from the output of a command')
 parser.add_argument('-e', '--exclude-stderr', action='store_true')
+parser.add_argument('-f', '--filename')
 parser.add_argument('command', nargs=argparse.REMAINDER)
 args = parser.parse_args()
 

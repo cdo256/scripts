@@ -5,11 +5,21 @@ import argparse
 parser = argparse.ArgumentParser(description='Find file/line recursively jump to it, wraps jumplist and grep')
 parser.add_argument('query')
 parser.add_argument('location', nargs='?')
+parser.add_argument('-J', '--no-jump', action='store_false', dest='jump')
+parser.add_argument('-f', '--filename-search', action='store_true')
 args = parser.parse_args()
 
-# -H - filenames, -n - line numbers, -r - recursive, -I - ignore binary
-command = ['jumplist', 'grep', '-HnrI', '--', args.query]
-if args.location is not None:
-	command.extend([args.location])
+if args.location is None:
+	args.location = '.'
+
+if args.filename_search:
+	command = ['find', args.location, '-regex', os.path.join(args.location,'')+args.query]
+else:
+	# -H - filenames, -n - line numbers, -r - recursive, -I - ignore binary
+	command = ['grep', '-HnrI', '--', args.query, args.location]
+
+if args.jump:
+	jlargs = ['--filename'] if args.filename_search else []
+	command = ['jumplist'] + jlargs + command
 
 os.execvp(command[0], command)
