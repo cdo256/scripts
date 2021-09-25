@@ -11,7 +11,7 @@ def lineCount(file):
 
 parser = argparse.ArgumentParser(description='Jump to lines selected from the output of a command')
 parser.add_argument('-e', '--exclude-stderr', action='store_true')
-parser.add_argument('-f', '--filename')
+parser.add_argument('-f', '--filename', action='store_true', help='test every line for being a filename')
 parser.add_argument('command', nargs=argparse.REMAINDER)
 args = parser.parse_args()
 
@@ -27,19 +27,24 @@ tail = False # copy indented lines after entry
 
 def add_entry(entries, entry, file, line):
 	print(str(len(entries)), entry, sep=':\t', end='')
+	#TODO: Last entry isn't used. Remove it.
 	entries.append([[entry], file, line, []])
 
 with listingProcess.stdout as inputFile:
 	for rawEntry in inputFile.readlines():
 		entry = rawEntry.decode()
+		f1 = re.match(r'^([^\n]+)$', entry)
 		# Doesn't work if filename contains colon or a whitespace character
-		entryData1 = re.match(r'^([^:\s]+):([0-9]+):([0-9]+:)?.*$', entry)
-		entryData2 = re.match(r'^\s*File "([^"]+)", line ([0-9]+).*$', entry)
-		if entryData1 is not None:
-			add_entry(entries, entry, entryData1.group(1), entryData1.group(2))
+		m1 = re.match(r'^([^:\s]+):([0-9]+):([0-9]+:)?.*$', entry)
+		m2 = re.match(r'^\s*File "([^"]+)", line ([0-9]+).*$', entry)
+		if args.filename and os.path.exists(f1.group(1)):
+			add_entry(entries, entry, f1.group(1), None)
 			tail = True
-		elif entryData2 is not None:
-			add_entry(entries, entry, entryData2.group(1), entryData2.group(2))
+		elif m1 is not None:
+			add_entry(entries, entry, m1.group(1), m1.group(2))
+			tail = True
+		elif m2 is not None:
+			add_entry(entries, entry, m2.group(1), m2.group(2))
 			tail = True
 		elif re.match('^[^\s]', entry) is None and tail:
 			print('\t'+entry, end='')
@@ -70,13 +75,15 @@ try:
 			for line in entries[i][0]:
 				print(line, end='')
 			filename = entries[i][1]
-			line = int(entries[i][2])
-			if filename in origLines:
-				# Account for changes made on prior lines, assume all changes were made above our current location.
-				line += lineCount(filename) - origLines[filename]
-			else:
-				origLines[filename] = lineCount(filename)
-			p = subprocess.Popen(['edit', '-s', '-l', str(line), filename])
+			line = int(entries[i][2]) if entries[i][2] is not None else None
+			if line is not None:
+				if filename in origLines:
+					# Account for changes made on prior lines, assume all changes were made above our current location.
+					line += lineCount(filename) - origLines[filename]
+				else:
+					origLines[filename] = lineCount(filename)
+			command = ['edit', '-s'] + (['-l', str(line)] if line is not None else []) + [filename]
+			p = subprocess.Popen(command)
 			p.wait()
 except KeyboardInterrupt:
 	# Ensure we flush before we exit otherwise the shell may print the prompt first
