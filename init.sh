@@ -1,14 +1,23 @@
-export PATH="/home/cdo/scpt:$PATH"
+export PATH="/home/cdo/scripts:$PATH"
 
-export EDITOR=edit
-export TERMINAL=st
-export BROWSER=firefox
+export EDITOR="edit"
+export TERMINAL="st"
+export BROWSER="web"
 
-export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_CONFIG_HOME="$HOME/config"
+export XDG_DATA_HOME="$HOME/.local/data"
+export XDG_STATE_HOME="$HOME/.local/state"
+export XDG_CACHE_HOME="$HOME/.local/cache"
+export XDG_DESKTOP_DIR="$HOME"
+export XDG_DOCUMENTS_DIR="$HOME"
+export XDG_DOWNLOAD_DIR="$HOME/downloads"
+export XDG_MUSIC_DIR="$HOME"
+export XDG_PICTURES_DIR="$HOME"
+export XDG_TEMPLATES_DIR="$HOME"
+export XDG_VIDEOS_DIR="$HOME"
 
-export HISTFILE="$HOME/.local/share/shell/histfile"
-
-export LESSHISTFILE=.local/share/less/hist
-export XAUTHORITY=$HOME/.local/share/x11/xAuthority
+export GNUPGHOME="$HOME/.local/secure/gnupg"
+export HISTFILE="$HOME/.local/data/shell/histfile"
+export LESSHISTFILE="$HOME/.local/data/less/hist"
+export XAUTHORITY="$HOME/.local/data/x11/xAuthority"
+export PYTHONSTARTUP="$HOME/config/python/startup.py"
