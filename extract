@@ -1,0 +1,28 @@
+#!/usr/bin/python3
+
+import subprocess as sp
+import os
+import shutil as sh
+import re
+import sys
+
+name = re.fullmatch(r'(.*).enc', sys.argv[1]).group(1)
+print(name)
+os.stat(name+'.enc')
+try:
+	os.stat(name)
+	if re.match(r'^[Nn]', input('Overwrite old plaintext? [Y/n] ')):
+		print("Aborting..")
+		exit(0)
+	else:
+		sh.rmtree(name)
+except FileNotFoundError:
+	pass
+
+sslP = sp.run(['openssl','enc','-d','-pbkdf2','-aes-256-cbc','-md','sha256',
+	'-in',name+'.enc'],
+	stdout=sp.PIPE, close_fds=True, check=True)
+tarP = sp.run(['tar','-xzvf','-','--',name],
+	input=sslP.stdout, check=True)
+if re.match(r'^([Yy].*)?$', input('Delete ciphertext? [Y/n] ')):
+	os.remove(name+'.enc')

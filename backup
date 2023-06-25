@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import sys
+import argparse
+
+parser = argparse.ArgumentParser(description='backup files to server')
+parser.add_argument('-s', '--server', )
+parser.add_argument('-t', '--terminal', action='store_true')
+parser.add_argument('location')
+args = parser.parse_args()
+
+if args.visual or ('DISPLAY' in os.environ and not args.terminal):
+	os.execvp('echo', ['echo', 'TODO: visual command'])
+else:
+	os.execvp('echo', ['echo', 'TODO: terminal command'])

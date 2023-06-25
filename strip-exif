@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+import os
+import subprocess as sp
+import sys
+import argparse
+import shutil
+
+parser = argparse.ArgumentParser(description='Strip exif data recursively')
+parser.add_argument('source_dir')
+parser.add_argument('dest_dir')
+args = parser.parse_args()
+
+print("copying...")
+
+#os.mkdir(args.dest_dir)
+
+shutil.copytree(args.source_dir, args.dest_dir)
+
+tasks = []
+
+print("stripping...");
+
+for root, dirs, files in os.walk(args.dest_dir):
+	for file in files:
+		tasks.append(sp.Popen([
+			'exiftool',
+			'-all=',
+			os.path.join(root, file)]))
+
+print(f'{len(tasks)} tasks')
+
+for task in tasks:
+	task.wait()
+

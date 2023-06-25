@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+import subprocess as sp
+import datetime
+
+def backup_filename(machine_name, part, file_system='/mnt/9', date=None):
+    if not date:
+        date = datetime.date.today()
+    date_stamp = date.strftime('%Y%m%d')
+    filename = f"{file_system}/backup/{date_stamp}-{machine_name}-{part}.tar.gz"
+    return filename
+
+def run_tar_backup(machine_name, part):
+    part_map = {
+        'root': '/',
+        'home': '/home',
+        'store': '/gnu/store'}
+    exclude = ['--one-file-system', '--exclude=/dev', '--exclude=/gnu/store', '--exclude=/sys', '--exclude=/proc', '--exclude=/mnt', '--exclude=/tmp', '--exclude=/root']
+    local = (machine_name == 'peter') # TODO: Use hostname
+    command = ['tar', '-cazvf']
+    if local: command.append(backup_filename(machine_name, part))
+    else: command.append('-')
+    command += exclude + ['-C', '/'] + [part_map[part]]
+    if local:
+        print(f'Running command: {command}')
+        sp.run(command)
+    else:
+        command = ['ssh', 'backup@'+machine_name] + command
+        file = backup_filename(machine_name, part)
+        print(f'Running command: {" ".join(command)} >{file}')
+        sp.run(command, stdout=open(file, 'xb'))
+
+# TODO: Test remote backup, and rsync.
+# run_tar_backup('peter', 'home')
+run_tar_backup('isaac', 'home')
+# sp.run(['rsync', '-Pnva', '/mnt/9/', '/mnt/3/'])
+# sp.run(['rsync', '-Pnva', '/mnt/9/', 'cdo@william:/srv/files/cdo/'])
