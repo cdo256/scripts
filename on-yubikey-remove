@@ -1,0 +1,5 @@
+#!/run/current-system/profile/bin/fish
+
+# No-op for now but I want it to run swaylock when I have time to get that working
+
+#gpg-connect-agent "scd serialno" "learn --force" /bye
