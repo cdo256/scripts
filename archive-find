@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import glob
+import tarfile
+
+def find_file(root):
+    matches = []
+
+    for root, dirnames, filenames in os.walk(root):
+        for filename in filenames:
+            matches.append(os.path.join(root, filename))
+
+    return matches
+
+def search_in_tar(file_path, file_pattern, is_glob):
+    matches = []
+    with tarfile.open(file_path, 'r:gz') as tar:
+        for member in tar.getmembers():
+            if member.isfile():
+                if is_glob:
+                    if glob.fnmatch.fnmatch(member.name, file_pattern):
+                        matches.append(member.name)
+                else:
+                    if member.name == file_pattern:
+                        matches.append(member.name)
+    return matches
+
+def main():
+    parser = argparse.ArgumentParser(description='Search for a file in the specified root.')
+    parser.add_argument('--root', default='/mnt/9/archive', help='Root directory to start search from.')
+    parser.add_argument('-g', action='store_true', help='Use glob pattern for file search.')
+    parser.add_argument('filename', help='File name or pattern to search for.')
+    args = parser.parse_args()
+
+    matches = find_file(args.root)
+
+    tar_matches = []
+    for match in matches:
+        if match.endswith('.tar.gz'):
+            print(f'searching in {match}...')
+            print(f'{len(tar_matches)} matches found so far.')
+            tar_matches.extend(search_in_tar(match, args.filename, args.g))
+
+    print(f'Found {len(tar_matches)} match(es) in tar files:')
+    for match in tar_matches:
+        print(match)
+
+if __name__ == '__main__':
+    main()
