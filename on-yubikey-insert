@@ -1,3 +1,4 @@
-#!/run/current-system/profile/bin/fish
+#!/bin/sh
 
+touch /tmp/gpg-connect
 gpg-connect-agent "scd serialno" "learn --force" /bye
