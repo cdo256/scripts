@@ -32,20 +32,28 @@ def run_command_with_tee(command, log_file_path):
 
     return process.returncode
 
+def acquire_unique_filename(filename, extension):
+    suffix = ''
+    count = 0
+    while os.path.exists(filename + suffix + extension):
+        count += 1
+        suffix = '-' + str(count)
+    return filename + suffix + extension
+
 def backup_filename(machine_name, part, file_system='/mnt/9', date=None):
     if not date:
         date = datetime.date.today()
     date_stamp = date.strftime('%Y%m%d')
-    filename = f"{file_system}/backup/{date_stamp}-{machine_name}-{part}.tar.gz"
-    return filename
+    filename = f"{file_system}/backup/{date_stamp}-{machine_name}-{part}"
+    return acquire_unique_filename(filename, '.tar.gz')
 
 def archive_filename(name, file_system='/mnt/9', date=None):
     if not date:
         date = datetime.date.today()
     qtr = (date.month - 1) // 3 + 1
     date_stamp = date.strftime(f'%Yq{qtr}')
-    filename = f"{file_system}/archive/{date_stamp}-{name}.tar.gz"
-    return filename
+    filename = f"{file_system}/archive/{date_stamp}-{name}"
+    return acquire_unique_filename(filename, '.tar.gz')
 
 def lookup_part_path(part):
     part_map = {
@@ -61,17 +69,10 @@ def lookup_part_path(part):
 def execute_command(command, stdout=None, verbose=False, stderr=None):
     if stdout:
         if verbose: eprint(f'Running command: {" ".join(command)} >{stdout}')
-        result = sp.run(command, stdout=stdout, stderr=stderr)
+        result = sp.run(command, check=True, stdout=stdout, stderr=stderr)
     else:
         if verbose: eprint(f'Running command: {" ".join(command)}')
-        result = sp.run(command, stderr=stderr)
-
-    if result.returncode != 0:
-        eprint(f'error {result.returncode} occurred in ssh command: ')
-        eprint(result.stderr.decode())
-    else:
-        if verbose: eprint(result.stderr.decode())
-        return True
+        result = sp.run(command, check=True, stderr=stderr)
 
 def execute_maybe_remote_transfer(command, machine_name, filename, stdout=None, verbose=False, remove_file=False, stderr=None):
     local = (machine_name == gethostname())
@@ -84,11 +85,11 @@ def execute_maybe_remote_transfer(command, machine_name, filename, stdout=None, 
                 with open(filename, 'xb') as f:
                     result = execute_command(command, f, verbose, logfile)
             if verbose: eprint(f'Tar successfully written to ' + filename)
-            return result
+            return True
         except Exception as e:
             eprint(f'Caught exception: {e}')
             eprint(f'Log file saved to '+logfile.name)
-            if remove_file or (os.path.isfile(file_path) and os.path.getsize(file_path) == 0):
+            if remove_file or (os.path.isfile(filename) and os.path.getsize(filename) == 0):
                 if verbose: eprint(f'Removing aborted file ' + filename)
                 os.remove(filename)
             return False
@@ -99,9 +100,7 @@ def run_tar_archive(machine_name, name, path, verbose=False, exclude=[]):
         return False
     local = (machine_name == gethostname())
     filename = archive_filename(name)
-    if os.path.exists(filename):
-        eprint(f'Destination archive file {filename} already exists. Please pick a different name.')
-        return False
+    assert(not os.path.exists(filename))
     parent_dir, dir_name = os.path.split(os.path.normpath(path))
 
     command = ['tar', '--remove-files', '-caz'] + exclude
@@ -109,7 +108,11 @@ def run_tar_archive(machine_name, name, path, verbose=False, exclude=[]):
     if local: command += ['-f', filename]
     else: command += ['-f', filename]
     command += ['-C', parent_dir, dir_name]
-    return execute_maybe_remote_transfer(command, machine_name, filename, verbose)
+    status = execute_maybe_remote_transfer(command, machine_name, filename, verbose)
+    if status == 0:
+        return filename
+    else:
+        return None
 
 def run_tar_backup(machine_name, part, path=None, verbose=False, extra_excludes=[]):
     if path is None:
@@ -123,17 +126,17 @@ def run_tar_backup(machine_name, part, path=None, verbose=False, extra_excludes=
     exclude = ['--one-file-system', '--exclude=/dev', '--exclude=/gnu/store', '--exclude=/sys', '--exclude=/proc', '--exclude=/mnt', '--exclude=/tmp', '--exclude=/root'] + extra_excludes
     local = (machine_name == gethostname())
     filename = backup_filename(machine_name, part)
-    if os.path.exists(filename):
-        eprint(f'Destination archive file {filename} already exists. Please pick a different name.')
-        return False
-
+    assert(not os.path.exists(filename))
     command = ['tar', '-caz'] + exclude
     if verbose: command.append('-v')
     if local: command += ['-f', filename]
     else: command += ['-f', '-']
     command += ['-C', '/', path]
-
-    return execute_maybe_remote_transfer(command, machine_name, filename, verbose)
+    status = execute_maybe_remote_transfer(command, machine_name, filename, verbose)
+    if status == 0:
+        return filename
+    else:
+        return None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='backup files to server')
@@ -161,7 +164,12 @@ if __name__ == "__main__":
     exclude = args.exclude if args.exclude is not None else []
 
     if args.archive:
-        status = run_tar_archive(args.machine, args.part, args.path, args.verbose, exclude)
+        filename = run_tar_archive(args.machine, args.part, args.path, args.verbose, exclude)
     else:
-        status = run_tar_backup(args.machine, args.part, args.path, args.verbose, exclude)
-    sys.exit(status)
+        filename = run_tar_backup(args.machine, args.part, args.path, args.verbose, exclude)
+
+    if filename is not None:
+        print(filename)
+        sys.exit(0)
+    else:
+        sys.exit(1)
