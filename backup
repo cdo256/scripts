@@ -40,19 +40,19 @@ def acquire_unique_filename(filename, extension):
         suffix = '-' + str(count)
     return filename + suffix + extension
 
-def backup_filename(machine_name, part, file_system='/mnt/9', date=None):
+def backup_filename(machine, part, filesystem, date=None):
     if not date:
         date = datetime.date.today()
     date_stamp = date.strftime('%Y%m%d')
-    filename = f"{file_system}/backup/{date_stamp}-{machine_name}-{part}"
+    filename = f"{filesystem}/backup/{date_stamp}-{machine}-{part}"
     return acquire_unique_filename(filename, '.tar.gz')
 
-def archive_filename(name, file_system='/mnt/9', date=None):
+def archive_filename(name, filesystem, date=None):
     if not date:
         date = datetime.date.today()
     qtr = (date.month - 1) // 3 + 1
     date_stamp = date.strftime(f'%Yq{qtr}')
-    filename = f"{file_system}/archive/{date_stamp}-{name}"
+    filename = f"{filesystem}/archive/{date_stamp}-{name}"
     return acquire_unique_filename(filename, '.tar.gz')
 
 def lookup_part_path(part):
@@ -69,21 +69,21 @@ def lookup_part_path(part):
 def execute_command(command, stdout=None, verbose=False, stderr=None):
     if stdout:
         if verbose: eprint(f'Running command: {" ".join(command)} >{stdout}')
-        result = sp.run(command, check=True, stdout=stdout, stderr=stderr)
+        result = sp.run(command, check=False, stdout=stdout, stderr=stderr)
     else:
         if verbose: eprint(f'Running command: {" ".join(command)}')
-        result = sp.run(command, check=True, stderr=stderr)
+        result = sp.run(command, check=False, stderr=stderr)
 
-def execute_maybe_remote_transfer(command, machine_name, filename, stdout=None, verbose=False, remove_file=False, stderr=None):
-    local = (machine_name == gethostname())
+def execute_maybe_remote_transfer(command, machine=None, filename=None, stdout=None, verbose=False, remove_file=False, stderr=None):
+    local = (machine == gethostname())
     with NamedTemporaryFile() as logfile:
         try:
             if local:
-                result = execute_command(command, None, verbose, logfile)
+                result = execute_command(command, stdout=None, verbose=verbose, stderr=logfile)
             else:
-                command = ['ssh', 'backup@'+machine_name] + command
+                command = ['ssh', 'backup@'+machine] + command
                 with open(filename, 'xb') as f:
-                    result = execute_command(command, f, verbose, logfile)
+                    result = execute_command(command, stdout=f, verbose=verbose, stderr=logfile)
             if verbose: eprint(f'Tar successfully written to ' + filename)
             return True
         except Exception as e:
@@ -94,27 +94,27 @@ def execute_maybe_remote_transfer(command, machine_name, filename, stdout=None, 
                 os.remove(filename)
             return False
 
-def run_tar_archive(machine_name, name, path, verbose=False, exclude=[]):
+def run_tar_archive(machine, name, path=None, verbose=False, excludes=[], filesystem=None):
     if path is None:
         eprint(f'No path is associated with part "{part}", please supply with -p.')
         return False
-    local = (machine_name == gethostname())
+    local = (machine == gethostname())
     filename = archive_filename(name)
     assert(not os.path.exists(filename))
     parent_dir, dir_name = os.path.split(os.path.normpath(path))
 
-    command = ['tar', '--remove-files', '-caz'] + exclude
+    command = ['tar', '--remove-files', '-caz'] + excludes
     if verbose: command.append('-v')
     if local: command += ['-f', filename]
     else: command += ['-f', filename]
     command += ['-C', parent_dir, dir_name]
-    status = execute_maybe_remote_transfer(command, machine_name, filename, verbose)
+    status = execute_maybe_remote_transfer(command, machine=machine, filename=filename, verbose=verbose)
     if status == 0:
         return filename
     else:
         return None
 
-def run_tar_backup(machine_name, part, path=None, verbose=False, extra_excludes=[]):
+def run_tar_backup(machine, part, path=None, verbose=False, excludes=[], filesystem=None):
     if path is None:
         path = lookup_part_path(part)
         if path is None:
@@ -123,16 +123,16 @@ def run_tar_backup(machine_name, part, path=None, verbose=False, extra_excludes=
     else:
         path = path
 
-    exclude = ['--one-file-system', '--exclude=/dev', '--exclude=/gnu/store', '--exclude=/sys', '--exclude=/proc', '--exclude=/mnt', '--exclude=/tmp', '--exclude=/root'] + extra_excludes
-    local = (machine_name == gethostname())
-    filename = backup_filename(machine_name, part)
+    excludes += ['--one-file-system', '--exclude=/dev', '--exclude=/gnu/store', '--exclude=/bak', '--exclude=/sys', '--exclude=/proc', '--exclude=/mnt', '--exclude=/tmp', '--exclude=/root']
+    local = (machine == gethostname())
+    filename = backup_filename(machine, part, filesystem)
     assert(not os.path.exists(filename))
-    command = ['tar', '-caz'] + exclude
+    command = ['tar', '-caz'] + excludes
     if verbose: command.append('-v')
     if local: command += ['-f', filename]
     else: command += ['-f', '-']
     command += ['-C', '/', path]
-    status = execute_maybe_remote_transfer(command, machine_name, filename, verbose)
+    status = execute_maybe_remote_transfer(command, machine=machine, filename=filename, verbose=verbose)
     if status == 0:
         return filename
     else:
@@ -140,7 +140,7 @@ def run_tar_backup(machine_name, part, path=None, verbose=False, extra_excludes=
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='backup files to server')
-    parser.add_argument('-m', '--machine', default='peter',
+    parser.add_argument('-m', '--machine', default=gethostname(),
                         help='Name of machine to backup from, or peter for local backup')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-p', '--path',
@@ -149,8 +149,11 @@ if __name__ == "__main__":
                         help='Additional excludes')
     parser.add_argument('-a', '--archive', action='store_true',
                         help='Remove file after it\'s been backed up, and store in archive/ directory')
+    parser.add_argument('-f', '--filesystem', default=('/bak/' + os.getenv('USER')),
+                        help='File path to store the output in')
     parser.add_argument('part',
                         help='The root name of the archive to create')
+    
     # args, unknown_args = parser.parse_known_args()
     args = parser.parse_args()
     if args.verbose:
@@ -160,13 +163,14 @@ if __name__ == "__main__":
         eprint(f'machine: {args.machine}')
         eprint(f'excludes: {args.exclude}')
         eprint(f'archive: {args.archive}')
+        eprint(f'filesystem: {args.filesystem}')
         # eprint(f'Additional args to send to tar: {unknown_args}')
     exclude = args.exclude if args.exclude is not None else []
 
     if args.archive:
-        filename = run_tar_archive(args.machine, args.part, args.path, args.verbose, exclude)
+        filename = run_tar_archive(args.machine, args.part, path=args.path, verbose=args.verbose, excludes=exclude, filesystem=args.filesystem)
     else:
-        filename = run_tar_backup(args.machine, args.part, args.path, args.verbose, exclude)
+        filename = run_tar_backup(args.machine, args.part, path=args.path, verbose=args.verbose, excludes=exclude, filesystem=args.filesystem)
 
     if filename is not None:
         print(filename)
