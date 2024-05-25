@@ -1,0 +1,30 @@
+#!/bin/sh
+# Exit on failure
+set -euxo pipefail
+
+# Define an array that maps GitLab and GitHub repository URLs
+declare -A repo_map=(
+    ["cdo/scripts"]="cdo256/scripts"
+    ["cdo/guix-channel"]="cdo256/guix-channel"
+    #["cdo/config"]="cdo256/config-files"
+)
+
+dir=`mktemp -d`
+echo "$dir"
+cd "$dir"
+
+# Loop through the array and mirror each GitLab repository to its corresponding GitHub repository
+for gitlab_name in "${!repo_map[@]}"; do
+    gitlab_url="https://git.mutix.org/${gitlab_name}.git"
+    github_name="${repo_map[$gitlab_name]}"
+    github_url="https://github.com/${github_name}.git"
+
+    if [[ ! -e "${gitlab_url}" ]]; then
+        mkdir -p "${gitlab_name}"
+        git clone --mirror "$gitlab_url" "${gitlab_name}"
+    fi
+    pushd "${gitlab_name}"
+    git remote add github "$github_url"
+    git push --mirror github
+    popd
+done
