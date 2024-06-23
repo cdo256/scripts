@@ -1,0 +1,13 @@
+#!/bin/sh
+
+echo "key type [ed25519-sk]: "
+readline type
+if [[ -z "$type" ]]; then
+   type=ed25519-sk
+fi
+echo "name: "
+readline name
+echo "comment: "
+readline comment
+
+ssh-keygen -t $type -f ~/.ssh/$name -C "$comment"
